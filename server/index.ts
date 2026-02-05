@@ -90,14 +90,15 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+
+  // `reusePort` is a Replit-friendly setting, but it's not supported on Windows
+  // (it throws ENOTSUP). We only enable it on non-Windows platforms.
+  const listenOptions: Parameters<typeof httpServer.listen>[0] =
+    process.platform === "win32"
+      ? { port, host: "0.0.0.0" }
+      : { port, host: "0.0.0.0", reusePort: true };
+
+  httpServer.listen(listenOptions, () => {
+    log(`serving on port ${port}`);
+  });
 })();
